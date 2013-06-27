@@ -60,10 +60,9 @@ class DateTimeI18NBehavior  extends CActiveRecordBehavior
 				$event->sender->$columnName = Yii::app()->dateFormatter->formatDateTime(
 								CDateTimeParser::parse($event->sender->$columnName, $this->dateIncomeFormat),'medium',null);
 			}else{				
-				$event->sender->$columnName = 
-					Yii::app()->dateFormatter->formatDateTime(
-							CDateTimeParser::parse($event->sender->$columnName,	$this->dateTimeIncomeFormat), 
-							'medium', 'medium');
+                $newval = CDateTimeParser::parse($event->sender->$columnName,$this->dateTimeIncomeFormat);
+                // Check convert works, otherwise if source date is 0000-00-00 00:00:00 would return NOW()
+				$event->sender->$columnName = $newval !== FALSE ? Yii::app()->dateFormatter->formatDateTime($newval, 'medium', 'medium') : null;
 			}
 		}
 		return true;
