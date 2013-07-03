@@ -51,6 +51,10 @@ class DateTimeI18NBehavior  extends CActiveRecordBehavior
 						
 			if (($column->dbType != 'date') and ($column->dbType != 'datetime')) continue;
 			
+            // Store original somewhere
+            if (isset($event->sender->_original_dates))
+                $event->sender->_original_dates [$columnName] = $event->sender->$columnName;
+
 			if (!strlen($event->sender->$columnName)){ 
 				$event->sender->$columnName = null;
 				continue;
