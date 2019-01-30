@@ -19,20 +19,20 @@
 class DateTimeI18NBehavior extends CActiveRecordBehavior
 {
 	// Database format in php date time notation
-    public $databaseDateFormat = null;
-    public $databaseDateTimeFormat = null;
+	public $databaseDateFormat = null;
+	public $databaseDateTimeFormat = null;
 	
 	// Database format in Yii date time notation
 	public $databaseDateFormatYii = null;
 	public $databaseDateTimeFormatYii = null;
 
 	// Locale format in Yii date time notation
-    public $localeDateFormat = null;
-    public $localeDateTimeFormat = null;
+	public $localeDateFormat = null;
+	public $localeDateTimeFormat = null;
 	
 	// Locale representation width in Yii textual notation
-    public $localeDateWidth = null;
-    public $localeDateTimeWidth = null;
+	public $localeDateWidth = null;
+	public $localeDateTimeWidth = null;
 	
 	
 	/**
@@ -67,186 +67,157 @@ class DateTimeI18NBehavior extends CActiveRecordBehavior
 			$this->localeDateTimeWidth = Yii::app()->format->timeFormat;
 	}
 
-    /**
-     * List of columns by model classes. Contains only date and datetime columns
-     * cache = array(
-     *  typeName => array(
-     *    'date' => array() // Columns with 'date' type
-     *    'datetime' => array() // Columns with 'datetime' type
-     *  )
-     * )
-     *
-     * @var array
-     * @see DateTimeI18NBehavior::checkCache
-     */
-    private static $cache = array();
+	/**
+	 * List of columns by model classes. Contains only date and datetime columns
+	 * cache = array(
+	 *  typeName => array(
+	 *    'date' => array() // Columns with 'date' type
+	 *    'datetime' => array() // Columns with 'datetime' type
+	 *  )
+	 * )
+	 *
+	 * @var array
+	 * @see DateTimeI18NBehavior::checkCache
+	 */
+	private static $cache = array();
 
 	public function afterConstruct($event)
-    {
+	{
 		$this->initFormats();
-        return true;
-    }
+		return true;
+	}
 	
-    public function beforeSave($event)
-    {
-        $this->convertToDatabaseFormat($event->sender);
-        return true;
-    }
+	public function beforeSave($event)
+	{
+		$this->convertToDatabaseFormat($event->sender);
+		return true;
+	}
 
-    /**
-     * We must reconvert columns after they saved (little hack for CForm)
-     */
-    public function afterSave($event)
-    {
-        $this->convertToLocaleFormat($event->sender);
-        return true;
-    }
+	/**
+	 * We must reconvert columns after they saved (little hack for CForm)
+	 */
+	public function afterSave($event)
+	{
+		$this->convertToLocaleFormat($event->sender);
+		return true;
+	}
 
-    public function afterFind($event)
-    {
-        $this->convertToLocaleFormat($event->sender);
-        return true;
-    }
+	public function afterFind($event)
+	{
+		$this->convertToLocaleFormat($event->sender);
+		return true;
+	}
 
 	public function toLocaleDate($attribute)
 	{
 		return Yii::app()->dateFormatter->formatDateTime(
-                    CDateTimeParser::parse($this->owner->$attribute, $this->databaseDateFormatYii),
-                    Yii::app()->format->dateFormat,
-                    null
-                );
+					CDateTimeParser::parse($this->owner->$attribute, $this->databaseDateFormatYii),
+					Yii::app()->format->dateFormat,
+					null
+				);
 	}
 	
 	public function toLocaleDateTime($attribute)
 	{
 		return Yii::app()->dateFormatter->formatDateTime(
-                    CDateTimeParser::parse($this->owner->$attribute, $this->databaseDateTimeFormatYii),
-                    Yii::app()->format->dateFormat,
-                    Yii::app()->format->timeFormat
-                );
+					CDateTimeParser::parse($this->owner->$attribute, $this->databaseDateTimeFormatYii),
+					Yii::app()->format->dateFormat,
+					Yii::app()->format->timeFormat
+				);
 	}
 	
 	public function toDatabaseDate($attribute)
 	{
 		return date(
-                    $this->databaseDateFormat,
-                    CDateTimeParser::parse($this->owner->$attribute, $this->localeDateFormat)
-                );
+					$this->databaseDateFormat,
+					CDateTimeParser::parse($this->owner->$attribute, $this->localeDateFormat)
+				);
 	}
 	
 	public function toDatabaseDateTime($attribute)
 	{
 		return date(
-                    $this->databaseDateTimeFormat,
-                    CDateTimeParser::parse(
-                        $this->owner->$attribute,
-                        $this->localeDateTimeFormat
-                    )
-                );
+					$this->databaseDateTimeFormat,
+					CDateTimeParser::parse(
+						$this->owner->$attribute,
+						$this->localeDateTimeFormat
+					)
+				);
 	}
 	
 	
-    private function convertToLocaleFormat(CActiveRecord $model)
-    {
-        $this->checkCache($model);
-        $type = get_class($model);
-        $columns = &self::$cache[$type];
+	private function convertToLocaleFormat(CActiveRecord $model)
+	{
+		$this->checkCache($model);
+		$type = get_class($model);
+		$columns = &self::$cache[$type];
 		
-        // Convert all columns with 'date' type
-        foreach ($columns['date'] as $columnName)
-        {
-            if (strlen($model->$columnName) > 0)
-			{
-                // $model->$columnName = Yii::app()->dateFormatter->formatDateTime(
-                    // CDateTimeParser::parse($model->$columnName, $this->localeDateFormat),
-                    // Yii::app()->format->dateFormat,
-                    // null
-                // );
-				
+		// Convert all columns with 'date' type
+		foreach ($columns['date'] as $columnName)
+		{
+			if (strlen($model->$columnName) > 0)
+			{				
 				$model->$columnName = $this->toLocaleDate($columnName);
 			}
-        }
+		}
 
-        // Convert all columns with 'datetime' type
-        foreach ($columns['datetime'] as $columnName)
-        {			
-            if (strlen($model->$columnName) > 0)
+		// Convert all columns with 'datetime' type
+		foreach ($columns['datetime'] as $columnName)
+		{			
+			if (strlen($model->$columnName) > 0)
 			{
-                // $model->$columnName = Yii::app()->dateFormatter->formatDateTime(
-                    // CDateTimeParser::parse($model->$columnName, $this->localeDateTimeFormat),
-                    // Yii::app()->format->dateFormat,
-                    // Yii::app()->format->timeFormat
-                // );
 				$model->$columnName = $this->toLocaleDateTime($columnName);
 			}
-        }
-    }
+		}
+	}
 
-    private function convertToDatabaseFormat(CActiveRecord $model)
-    {
-        $this->checkCache($model);
-        $type = get_class($model);
-        $columns = &self::$cache[$type];
+	private function convertToDatabaseFormat(CActiveRecord $model)
+	{
+		$this->checkCache($model);
+		$type = get_class($model);
+		$columns = &self::$cache[$type];
 		$this->initFormats();
 		
-        // Convert all columns with 'date' type
-        foreach ($columns['date'] as $columnName)
-        {
-            if (strlen($model->$columnName) > 0)
+		// Convert all columns with 'date' type
+		foreach ($columns['date'] as $columnName)
+		{
+			if (strlen($model->$columnName) > 0)
 			{
-                // $model->$columnName = date(
-                    // $this->databaseDateFormat,
-                    // CDateTimeParser::parse($model->$columnName, $this->localeDateFormat)
-                // );
 				$model->$columnName = $this->toDatabaseDate($columnName);
 			}
-        }
+		}
 
-        // Convert all columns with 'datetime' type
-        foreach ($columns['datetime'] as $columnName)
-        {
-            if (strlen($model->$columnName) > 0)
+		// Convert all columns with 'datetime' type
+		foreach ($columns['datetime'] as $columnName)
+		{
+			if (strlen($model->$columnName) > 0)
 			{
-                // $model->$columnName = date(
-                    // $this->databaseDateTimeFormat,
-                    // CDateTimeParser::parse(
-                        // $model->$columnName,
-                        // strtr(
-                            // Yii::app()->locale->dateTimeFormat,
-                            // array(
-                                // "{0}" => $this->localeDateTimeFormat,
-                                // "{1}" => $this->localeDateFormat
-                            // )
-                        // )
-                    // )
-                // );
-				
 				$model->$columnName = $this->toDatabaseDateTime($columnName);
 			}
-        }
-    }
+		}
+	}
 	
-    /**
-     * Check cache for type of $model, and make if need
-     *
-     * @param CActiveRecord $model
-     */
-    private function checkCache(CActiveRecord $model)
-    {
-        $type = get_class($model);
-        if (!isset(self::$cache[$type]))
-        {
-            self::$cache[$type] = array(
-                'date' => array(),
-                'datetime' => array()
-            );
+	/**
+	 * Check cache for type of $model, and make if need
+	 *
+	 * @param CActiveRecord $model
+	 */
+	private function checkCache(CActiveRecord $model)
+	{
+		$type = get_class($model);
+		if (!isset(self::$cache[$type]))
+		{
+			self::$cache[$type] = array(
+				'date' => array(),
+				'datetime' => array()
+			);
 
-            $columns = &self::$cache[$type];
-            foreach ($model->tableSchema->columns as $columnName => $column)
-            {
-                if ($column->dbType == 'date' || $column->dbType == 'datetime')
-                    $columns[$column->dbType][] = $columnName;
-            }
-        }
-    }
+			$columns = &self::$cache[$type];
+			foreach ($model->tableSchema->columns as $columnName => $column)
+			{
+				if ($column->dbType == 'date' || $column->dbType == 'datetime')
+					$columns[$column->dbType][] = $columnName;
+			}
+		}
+	}
 }
