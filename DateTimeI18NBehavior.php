@@ -34,38 +34,7 @@ class DateTimeI18NBehavior extends CActiveRecordBehavior
 	public $localeDateWidth = null;
 	public $localeDateTimeWidth = null;
 	
-	
-	/**
-	 * If format and width not set, retrieve them from the app and formatter.
-	 */
-	private function initFormats()
-	{
-		if($this->databaseDateFormat===null)
-			$this->databaseDateFormat = 'Y-m-d';
-		
-		if($this->databaseDateTimeFormat===null)
-			$this->databaseDateTimeFormat = 'Y-m-d H:i:s';
-		
-		// The Yii date format is slightly different
-		if($this->databaseDateFormatYii===null)
-			$this->databaseDateFormatYii = 'yyyy-MM-dd';
-		
-		// The Yii date time format is slightly different
-		if($this->databaseDateTimeFormatYii===null)
-			$this->databaseDateTimeFormatYii = 'yyyy-MM-dd hh:mm:ss';
-		
-		if($this->localeDateFormat===null)
-			$this->localeDateFormat = Yii::app()->locale->getDateFormat(Yii::app()->format->dateFormat);
-		
-		if($this->localeDateTimeFormat===null)
-			$this->localeDateTimeFormat = Yii::app()->format->datetimeFormat;
-		
-		if($this->localeDateWidth===null)
-			$this->localeDateWidth = Yii::app()->format->dateFormat;
-		
-		if($this->localeDateTimeWidth===null)
-			$this->localeDateTimeWidth = Yii::app()->format->timeFormat;
-	}
+	private $_initialized = false;
 
 	/**
 	 * List of columns by model classes. Contains only date and datetime columns
@@ -104,8 +73,46 @@ class DateTimeI18NBehavior extends CActiveRecordBehavior
 
 	public function afterFind($event)
 	{
+		$this->initFormats();
 		$this->convertToLocaleFormat($event->sender);
 		return true;
+	}
+	
+	/**
+	 * If format and width not set, retrieve them from the app and formatter.
+	 */
+	private function initFormats()
+	{
+		if($this->_initialized===true)
+			return;
+		
+		if($this->databaseDateFormat===null)
+			$this->databaseDateFormat = 'Y-m-d';
+		
+		if($this->databaseDateTimeFormat===null)
+			$this->databaseDateTimeFormat = 'Y-m-d H:i:s';
+		
+		// The Yii date format is slightly different
+		if($this->databaseDateFormatYii===null)
+			$this->databaseDateFormatYii = 'yyyy-MM-dd';
+		
+		// The Yii date time format is slightly different
+		if($this->databaseDateTimeFormatYii===null)
+			$this->databaseDateTimeFormatYii = 'yyyy-MM-dd HH:mm:ss';
+		
+		if($this->localeDateFormat===null)
+			$this->localeDateFormat = Yii::app()->locale->getDateFormat(Yii::app()->format->dateFormat);
+		
+		if($this->localeDateTimeFormat===null)
+			$this->localeDateTimeFormat = Yii::app()->format->datetimeFormat;
+		
+		if($this->localeDateWidth===null)
+			$this->localeDateWidth = Yii::app()->format->dateFormat;
+		
+		if($this->localeDateTimeWidth===null)
+			$this->localeDateTimeWidth = Yii::app()->format->timeFormat;
+		
+		$this->_initialized=true;
 	}
 
 	public function toLocaleDate($attribute)
